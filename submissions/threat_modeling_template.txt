@@ -1,0 +1,91 @@
+Docker Threat Modeling
+Given Docker's system components and the STRIDE framework, identify five potential threats that may arise.
+
+1. Spoofing: An attacker could exploit a vulnerability in docker daemon or registry to perform a 
+             man-in-the-middle (MITM) attack. The spoofing could be the attacker introducing malicious images.
+
+2. Tampering: An attacker might try to alter docker client or docker daemon configuration on the host.
+
+3. Repudiation: An attacker might try to erase or modify docker logs or other audit trails to cover up 
+                introduction of malicious images.
+
+4. Information Disclosure: The Dockerfile's security and consequently the image security may be compromised 
+            if the client accidentally discloses sensitive information like secrets that are hardcoded in 
+            configuration files.
+
+5. Elevation of Privilege: If the Docker daemon is running with elevated privileges or Docker containers 
+            are running with privileged mode enabled, an attacker may be able to exploit this to gain 
+            elevated privileges.
+
+Kubernetes Threat Modeling
+Given Kubernetes' system components and the STRIDE framework, identify five potential threats that may arise.
+
+1. Spoofing: It is possible for an attacker to potentially impersonate a Kube API server or another 
+                trusted entity in the system in order to obtain unauthorized access to private information 
+                or resources.
+
+2. Tampering: An attacker may alter the etcd configuration, changing important configurations.
+
+3. Repudiation: A malicious user could potentially deny performing an action or deny that an event occurred 
+                within a Kubernetes system, such as by modifying logs or other audit trails. 
+                This could make it difficult to track down the source of a security incident.
+
+4. Information Disclosure: The etcd key-value store holds sensitive information about the components of a 
+                        kubernetes cluster. These Sensitive information may be exposed via the etcd key-value store.
+
+5. Elevation of Privilege: an attacker can cause havoc if the privileged mode is not appopriately configured.
+
+Docker-bench Run Results and Analysis
+From the failed findings, select and document 3 findings from the Docker-bench results that you want to harden based on the 5 attack surface areas you identified in Step 1. At least 1 of the 3 hardened findings should be different from the ones mentioned in the exercise (i.e. 5.10, 5.14, and 5.22).
+
+
+1. [FAIL] 4.5 Ensure Content trust for Docker is Enabled (Scored)
+    Description: From CIS Docker Benchmark Provided by the Center for Internet Security, Content trust is 
+        disabled by default and should be enabled in line with organizational security policy.
+    Impact: In an environment where DOCKER_CONTENT_TRUST is set, you are required to follow trust procedures 
+            whilst working with the image related commands - build, create, pull, pushand run. 
+            You can use the --disable-content-trust flag to run individual operations on tagged images 
+            without content trust on an as needed basis, but this defeats the purpose of enabling content 
+            trust and therefore should be avoided wherever possible.
+    Risks: The following risks are inherent if content trust is not enabled:
+        1. Man-in-the-middle (MITM) attacks: Without content trust enabled, attackers can perform a MITM attack 
+                by intercepting the communication between the Docker client and registry, and injecting 
+                malicious code or tampered Docker images.
+        2. Malware injection: Attackers can inject malware into the Docker images, and this malware can then 
+                spread throughout the container infrastructure, causing significant harm.
+        3. Vulnerability exploitation: Without content trust, attackers can exploit known vulnerabilities in 
+                Docker images that have not been patched.
+    Remediation: To enable content trust, run the command: 'export DOCKER_CONTENT_TRUST=1'
+
+2. [FAIL] 5.12 Ensure that the container's root filesystem is mounted as read only (Scored)
+    Description: From CIS Docker Benchmark Provided by the Center for Internet Security, 
+        The container's root filesystem should be treated as a 'golden image' by using Docker run's --read-only 
+        option. This prevents any writes to the container's root filesystem at container runtime and enforces 
+        the principle of immutable infrastructure.
+    Impact: Enabling --read-only at container runtime may break some container OS packages if a data writing 
+        strategy is not defined.
+    Risks: The following risks are inherent if the container's root filesystem is not mounted as read only:
+        1. Malware or other malicious code could be injected into the container's root filesystem, 
+            potentially compromising the security of the container and the host system.
+        2. Sensitive data or credentials could be stolen by malicious code running inside the container and 
+            modifying the filesystem.
+        3. The container could be used to launch attacks on other containers or systems on the network.
+    Remediation: Add a --read-only flag at a container's runtime to enforce the container's root filesystem 
+        being mounted as read only. Run the command below
+            `docker run <Run arguments> --read-only <Container Image Name or ID> <Command>`
+
+3. [FAIL] 5.25 Ensure that the container is restricted from acquiring additional privileges (Scored)
+    Description: From CIS Docker Benchmark Provided by the Center for Internet Security,
+        You should restrict the container from acquiring additional privileges via suid or sgid bits.
+    Impact: The no_new_priv option prevents LSMs like SELinux from allowing processes to acquire new privileges
+    Risks: 
+        1. Host system compromise: The container may be able to gain root access on the host system and 
+            execute arbitrary code, compromising the entire system.
+        2. Information disclosure: The container may be able to access sensitive information or data 
+            outside of its intended scope, such as reading configuration files or accessing other containers' 
+            data.
+        3. Denial of service: The container may be able to launch resource-intensive operations that consume 
+            all available resources on the host system, causing denial of service for other applications or 
+            containers running on the same system.
+    Remediation: You should start your container with the options below:
+            `docker run --rm -it --security-opt=no-new-privileges ubuntu bash`

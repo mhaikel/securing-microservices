@@ -1,0 +1,33 @@
+How to test changes:
+Customer satisfaction is the sole aim of any software product and regardless of the type of customer using a 
+a system, service outage will really impact customer satisfaction negatively as such a test plan that would 
+avoid outage of the cluster is going to be presented.
+To ensure that the kubernetes hardening test does not lead to cluster outage and consequently shutting out the 
+production system, we're going to make use of three environments for applying cluster hardening changes:
+1. Development Environment: This environment would be the first point of entry for all test changes.
+    Developers and security engineers can deploy changes and test for any abnormality of the changes.
+    The process is iterated until the change is ready for the next stage of testing.
+2. Staging Environment: Once the changes are tested and confirmed to be fairly stable then the changes can be
+    moved to the staging environment. This environment which is sometimes called beta environment is very similar
+    to the production environment. More production-like test are run on these changes to verify the changes made.
+3. Production Environment: Once all changes has been tested and found to be stable then these changes can be 
+    moved to the production environment.
+
+
+How will you ensure the changes don't negatively affect your cluster?
+Downtime or a product that doesn't work as it should can lead to customer dissatisfaction.
+By thoroughly testing changes in multiple environments, we can be certain of a more relaiable product.
+Proper monitoring using prometheus and grafana would be utilized across these multiple environments especially in
+the production environment to ensure that the cluster is not negatively impacted by the cluster hardening
+changes.
+Besides these monitoring and observability strategies, deploying changes to the production environment would be
+through the blue/gree deployment strategy.
+According to RedHat, Blue green deployment is an application release model that gradually transfers user 
+traffic from a previous version of an app or microservice to a nearly identical new release—both of which are 
+running in production. 
+The old version can be called the blue environment while the new version can be known as the green environment. 
+Once production traffic is fully transferred from blue to green, blue can standby in case of rollback or pulled 
+from production and updated to become the template upon which the next update is made.
+
+Using the Blue green deployment strategy can further ensure that changes don't negatively affect the cluster.
+
